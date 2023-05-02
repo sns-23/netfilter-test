@@ -84,7 +84,7 @@ static int check_host(struct nfq_data* nfa)
         return NF_ACCEPT;
     }
 
-    if (ph->hw_protocol != ETHER_TYPE_IPV4)
+    if (ntohs(ph->hw_protocol) != ETHER_TYPE_IPV4)
         return NF_ACCEPT;
 
     data_len = nfq_get_payload(nfa, &data);
@@ -97,10 +97,10 @@ static int check_host(struct nfq_data* nfa)
     if (ipv4_hdr->ip_p != IPV4_PROTOCOL_TCP)
         return NF_ACCEPT;
     
-    tcp_hdr = (char *)ipv4_hdr + ipv4_hdr->ip_hl;
+    tcp_hdr = (char *)ipv4_hdr + ipv4_hdr->ip_hl * 4;
 
-    http_hdr = (char *)tcp_hdr - tcp_hdr->th_off * 4;
-    http_data_len = ipv4_hdr->ip_len - ipv4_hdr->ip_hl - tcp_hdr->th_off * 4;
+    http_hdr = (char *)tcp_hdr + tcp_hdr->th_off * 4;
+    http_data_len = ntohs(ipv4_hdr->ip_len) - ipv4_hdr->ip_hl - tcp_hdr->th_off * 4;
     http_hdr[http_data_len] = 0;
 
     /* 
@@ -117,7 +117,7 @@ static int check_host(struct nfq_data* nfa)
     if (host == NULL)
         return NF_ACCEPT;
 
-    if (strcmp(host + sizeof("Host: ") - 1, blackhost) != 0)
+    if (strncmp(host + sizeof("Host: ") - 1, blackhost, strlen(blackhost)) != 0)
         return NF_ACCEPT;
 
     return NF_DROP;
