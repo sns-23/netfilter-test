@@ -100,7 +100,7 @@ static int check_host(struct nfq_data* nfa)
     tcp_hdr = (char *)ipv4_hdr + ipv4_hdr->ip_hl * 4;
 
     http_hdr = (char *)tcp_hdr + tcp_hdr->th_off * 4;
-    http_data_len = ntohs(ipv4_hdr->ip_len) - ipv4_hdr->ip_hl - tcp_hdr->th_off * 4;
+    http_data_len = ntohs(ipv4_hdr->ip_len) - ipv4_hdr->ip_hl * 4 - tcp_hdr->th_off * 4;
     http_hdr[http_data_len] = 0;
 
     /* 
